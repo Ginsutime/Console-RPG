@@ -1,195 +1,87 @@
-#include "Console.h"
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <random>
+#include <Windows.h>
+#include "Character.h"
+#include "Monster.h"
 
 /*
-4. Follow along with rest of video (pt 6)
 5. Fix invalid number option so that it allows the user to type again, currently continues looping through else portion of code
-6. Find a better place to store all the global/local vars if possible (struct or class?)
 */
 
-std::string name = " ", race = " ", sex = " ";
-int level = 0, xp = 0, health = 0, totalHealth = 0, xpToNextLevel = 0, heal = 0;
-int monsterHP = 0, monsterXP = 0, monsterLevel = 0;
+void HUD();
+void CombatHUD();
+void LevelUp();
+void Moving();
+void Combat();
 
-std::string monsterName[] = { "Goblin", "Dwarf", "Ogre", "Witch", "Demon", "Wizard" };
-std::string currentMonster = " ";
-bool playerTurnComplete = false;
+Character character;
+Monster monster;
 
 std::random_device dev;
 std::mt19937 rng(dev());
 
+void ConsolePos(short c, short r) {
+	COORD xy;
+	xy.X = c;
+	xy.Y = r;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), xy);
+}
+
+void ConsoleClear() {
+	ConsolePos(0, 0);
+	for (int i = 0; i < 100; i++)
+	{
+		std::cout << std::string(100, '\n');
+	}
+	ConsolePos(0, 0);
+}
+
 void HUD()
 {
 	Sleep(500);
-	Clear();
-	std::cout << "|" << std::left << std::setw(7) << "Name: " << std::setw(12) << name <<
-		"|" << std::setw(8) << "Health: " << std::setw(11) << health << "|" << std::endl;
-	std::cout << "|" << std::left << std::setw(7) << "Race: " << std::setw(12) << race <<
-		"|" << std::setw(8) << "Sex: " << std::setw(11) << sex << "|" << std::endl;
-	std::cout << "|" << std::left << std::setw(7) << "Level: " << std::setw(12) << level <<
-		"|" << std::setw(8) << "XP: " << std::setw(11) << xp << "|" << std::endl;
+	ConsoleClear();
+	std::cout << "|" << std::left << std::setw(7) << "Name: " << std::setw(12) << character.name <<
+		"|" << std::setw(8) << "Health: " << std::setw(11) << character.health << "|" << std::endl;
+	std::cout << "|" << std::left << std::setw(7) << "Race: " << std::setw(12) << character.race <<
+		"|" << std::setw(8) << "Sex: " << std::setw(11) << character.sex << "|" << std::endl;
+	std::cout << "|" << std::left << std::setw(7) << "Level: " << std::setw(12) << character.level <<
+		"|" << std::setw(8) << "XP: " << std::setw(11) << character.xp << "|" << std::endl;
 	std::cout << "-----------------------------------------" << std::endl;
 	std::cout << "|" << std::internal << std::setw(30) << "XP Needed To Level Up: " <<
-		xpToNextLevel << std::right << std::setw(8) << "|" << std::endl;
+		character.xpToNextLevel << std::right << std::setw(8) << "|" << std::endl;
 	std::cout << "-----------------------------------------" << std::endl;
 }
 
 void CombatHUD()
 {
 	Sleep(500);
-	Clear();
-	std::cout << "|" << std::left << std::setw(8) << "Name: " << std::setw(12) << name <<
+	ConsoleClear();
+	std::cout << "|" << std::left << std::setw(8) << "Name: " << std::setw(12) << character.name <<
 		std::setw(7) << "|" << std::right << std::setw(16) << "Monster Name: " <<
-		std::setw(6) << currentMonster << "|" << std::endl;
-	std::cout << "|" << std::left << std::setw(8) << "Health: " << std::setw(12) << health <<
+		std::setw(6) << monster.currentMonster << "|" << std::endl;
+	std::cout << "|" << std::left << std::setw(8) << "Health: " << std::setw(12) << character.health <<
 		std::setw(7) << "|" << std::right << std::setw(16) << "Monster Health: " <<
-		std::setw(6) << monsterHP << "|" << std::endl;
-	std::cout << "|" << std::left << std::setw(8) << "Level: " << std::setw(12) << level <<
+		std::setw(6) << monster.monsterHP << "|" << std::endl;
+	std::cout << "|" << std::left << std::setw(8) << "Level: " << std::setw(12) << character.level <<
 		std::setw(7) << "|" << std::right << std::setw(16) << "Monster Level: " <<
-		std::setw(6) << monsterLevel << "|" << std::endl;
+		std::setw(6) << monster.monsterLevel << "|" << std::endl;
 	std::cout << "---------------------------------------------------" << std::endl;
-}
-
-void CreatePlayer()
-{
-	// Char creation
-	std::cout << "Enter Character Name: ";
-	std::cin >> name;
-	ValidateRace();
-	ValidateSex();
-
-	// Flavor creation text
-	for (int i = 0; i < 3; ++i)
-	{
-		if (i == 0)
-			std::cout << "Creating Character.\n";
-		else if (i == 1)
-			std::cout << "Creating Character..\n";
-		if (i == 2)
-			std::cout << "Creating Character...\n";
-
-		Sleep(600);
-		Clear();
-	}
-}
-
-void ValidateRace()
-{
-	std::string playerRace[] = { "Gnome", "Elf", "Human", "Aasimar", "Goliath" };
-	int raceNumberInput = 0;
-	bool correctRaceInput = false;
-
-	std::cout << '\n' << "Playable Character Races: " << std::endl;
-	std::cout << "1: Gnome" << std::endl;
-	std::cout << "2: Elf" << std::endl;
-	std::cout << "3: Human" << std::endl;
-	std::cout << "4: Aasimar" << std::endl;
-	std::cout << "5: Goliath" << std::endl;
-	std::cout << '\n' << "Enter Character Race #: ";
-	std::cin >> raceNumberInput;
-
-	while (!correctRaceInput)
-	{
-		switch (raceNumberInput)
-		{
-		case 1:
-			race = playerRace[0];
-			health = 60;
-			correctRaceInput = true;
-			break;
-		case 2:
-			race = playerRace[1];
-			health = 80;
-			correctRaceInput = true;
-			break;
-		case 3:
-			race = playerRace[2];
-			health = 100;
-			correctRaceInput = true;
-			break;
-		case 4:
-			race = playerRace[3];
-			health = 120;
-			correctRaceInput = true;
-			break;
-		case 5:
-			race = playerRace[4];
-			health = 120;
-			correctRaceInput = true;
-			break;
-		default:
-			std::cin.clear();
-			std::cin.ignore(INT_MAX, '\n');
-			std::cout << "That is not a valid numerical option for a race. Try again: ";
-			std::cin >> raceNumberInput;
-			break;
-		}
-	}
-}
-
-void ValidateSex()
-{
-	char sexInput;
-	bool correctSexInput = false;
-
-	std::cout << "Enter Letter Denoting Character Sex (M or F)" << std::endl;
-	std::cin.ignore(INT_MAX, '\n');
-	sexInput = std::cin.get();
-	std::cin.ignore(INT_MAX, '\n');
-
-	while (!correctSexInput)
-	{
-		switch (sexInput)
-		{
-		case 'm':
-		case 'M':
-			sex = "Male";
-			correctSexInput = true;
-			break;
-		case 'f':
-		case 'F':
-			sex = "Female";
-			correctSexInput = true;
-			break;
-		default:
-			std::cin.clear();
-			std::cout << "Invalid answer for sex. Try again." << std::endl;
-			sexInput = std::cin.get();
-			std::cin.ignore(INT_MAX, '\n');
-			break;
-		}
-	}
-}
-
-void CreateMonster()
-{
-	size_t monsterArrSize = sizeof(monsterName) / sizeof(monsterName[0]);
-
-	std::uniform_int_distribution<std::size_t> monsterName_distribution(0, monsterArrSize - 1);
-	auto random_monsterName = monsterName_distribution(rng);
-	std::uniform_int_distribution<std::size_t> monsterHP_distribution(20, 50);
-	auto random_monsterHP = monsterHP_distribution(rng);
-	std::uniform_int_distribution<std::size_t> monsterLevel_distribution(0, 2);
-	auto random_monsterLevel = monsterLevel_distribution(rng);
-
-	currentMonster = monsterName[random_monsterName];
-
-	monsterHP = random_monsterHP;
-	monsterLevel = random_monsterLevel + level;
-	monsterXP = monsterHP;
 }
 
 void LevelUp()
 {
-	xp += monsterXP;
+	character.xp += monster.monsterXP;
 
-	if (xp >= xpToNextLevel)
+	if (character.xp >= character.xpToNextLevel)
 	{
-		level++;
-		xpToNextLevel = xpToNextLevel * 3 / 2;
-		totalHealth += 20; health += 20;
+		character.level++; monster.levelTracker++;
+		character.xpToNextLevel = character.xpToNextLevel * 3 / 2;
+		character.totalHealth += 20; character.health += 20;
 
-		std::cout << "You have leveled up and are now level " << level
-			<< ". Your total health has increased 20 points to " << totalHealth << "!" << std::endl;
+		std::cout << "You have leveled up and are now level " << character.level
+			<< ". Your total health has increased 20 points to " << character.totalHealth << "!" << std::endl;
 
 		Sleep(2000);
 		HUD();
@@ -218,8 +110,8 @@ void Moving()
 		if (random_encounterChance >= 50)
 		{
 			// Encounter monster
-			CreateMonster();
-			std::cout << "A " << currentMonster << " appears! Prepare to fight!" << std::endl;
+			monster.CreateMonster();
+			std::cout << "A " << monster.currentMonster << " appears! Prepare to fight!" << std::endl;
 			Sleep(1000);
 			Combat();
 		}
@@ -235,15 +127,14 @@ void Moving()
 	else if (moveOption == 2)
 	{
 		std::cout << "You rest for the time being." << std::endl;
-		if (health >= totalHealth)
-		{
-			health = totalHealth;
-		}
-		else
-		{
-			health += 10 * level;
-		}
-		std::cout << "You healed by resting. Health is now: " << health << std::endl;
+
+		if (character.health < character.totalHealth)
+			character.health += character.restHeal;
+
+		if (character.health >= character.totalHealth)
+			character.health = character.totalHealth;
+
+		std::cout << "You healed by resting. Health is now: " << character.health << std::endl;
 		Sleep(1000);
 		HUD();
 		Moving();
@@ -255,8 +146,8 @@ void Moving()
 		if (random_encounterChance >= 50)
 		{
 			// Encounter monster
-			CreateMonster();
-			std::cout << "A " << currentMonster << "appears! Prepare to fight!" << std::endl;
+			monster.CreateMonster();
+			std::cout << "A " << monster.currentMonster << " appears! Prepare to fight!" << std::endl;
 			Sleep(1000);
 			Combat();
 		}
@@ -284,11 +175,8 @@ void Combat()
 	auto random_successChance = successChance_distribution(rng);
 	int combatOption;
 
-	int playerDamage = 8 * level / 2;
-	int monsterDamage = 4 * monsterLevel / 2;
-
 	// If player turn and both sides not dead
-	if (health >= 1 && monsterHP >= 1 && !playerTurnComplete)
+	if (character.health >= 1 && monster.monsterHP >= 1 && !character.playerTurnComplete)
 	{
 		std::cout << std::endl;
 		std::cout << "1. Attack" << std::endl;
@@ -301,9 +189,9 @@ void Combat()
 		// Attack
 		if (combatOption == 1)
 		{
-			std::cout << "You attack and deal " << playerDamage << " damage to the " << currentMonster << "!" << std::endl;
-			monsterHP -= playerDamage;
-			playerTurnComplete = true;
+			std::cout << "You attack and deal " << character.playerDamage << " damage to the " << monster.currentMonster << "!" << std::endl;
+			monster.monsterHP -= character.playerDamage;
+			character.playerTurnComplete = true;
 
 			Sleep(1000);
 			Combat();
@@ -315,19 +203,18 @@ void Combat()
 
 			if (random_successChance >= 1)
 			{
-				heal = level * 10 / 2;
-				std::cout << "You manage to block the attack and regain " << heal << " health!" << std::endl;
+				std::cout << "You manage to block the attack and regain " << character.blockHeal << " health!" << std::endl;
 
-				if (health < totalHealth)
-					health += heal;
+				if (character.health < character.totalHealth)
+					character.health += character.blockHeal;
 
-				if (health >= totalHealth)
-					health = totalHealth;
+				if (character.health >= character.totalHealth)
+					character.health = character.totalHealth;
 			}
 			else
 				std::cout << "You fail to block the attack and take full damage!" << std::endl;
 
-			playerTurnComplete = true;
+			character.playerTurnComplete = true;
 
 			Sleep(1000);
 			Combat();
@@ -346,7 +233,7 @@ void Combat()
 			else
 			{
 				std::cout << "You fail to flee, opening yourself up to an attack!" << std::endl;
-				playerTurnComplete = true;
+				character.playerTurnComplete = true;
 
 				Sleep(1000);
 				Combat();
@@ -360,35 +247,37 @@ void Combat()
 		}
 	}
 	// If enemy turn and both sides not dead
-	else if (health >= 1 && monsterHP >= 1 && playerTurnComplete)
+	else if (character.health >= 1 && monster.monsterHP >= 1 && character.playerTurnComplete)
 	{
-		std::cout << '\n' << currentMonster << " attacks and deals " << monsterDamage << "!" << std::endl;
-		health -= monsterDamage;
-		playerTurnComplete = false;
+		monster.monsterDamage = 4 * monster.monsterLevel / 2;
+
+		std::cout << '\n' << monster.currentMonster << " attacks and deals " << monster.monsterDamage << "!" << std::endl;
+		character.health -= monster.monsterDamage;
+		character.playerTurnComplete = false;
 
 		Sleep(1000);
 		Combat();
 	}
 	// If player dies
-	else if (health <= 0)
+	else if (character.health <= 0)
 	{
-		health = 0;
+		character.health = 0;
 
-		Clear();
-		std::cout << "You died!" << '\n' << "You were level: " << level
-			<< ". You got killed by: " << currentMonster << std::endl;
+		ConsoleClear();
+		std::cout << "You died!" << '\n' << "You were level: " << character.level
+			<< ". You got killed by: " << monster.currentMonster << std::endl;
 		Sleep(2000);
 		exit(0);
 	}
 	// If monster dies
-	else if (monsterHP <= 0)
+	else if (monster.monsterHP <= 0)
 	{
-		playerTurnComplete = false; // Set back to player turn for next fight
+		character.playerTurnComplete = false; // Set back to player turn for next fight
 
-		monsterHP = 0;
+		monster.monsterHP = 0;
 
-		std::cout << '\n' << "You defeated: " << currentMonster << ". You gain "
-			<< monsterXP << " XP!" << std::endl;
+		std::cout << '\n' << "You defeated: " << monster.currentMonster << ". You gain "
+			<< monster.monsterXP << " XP!" << std::endl;
 		Sleep(2000);
 		LevelUp();
 
@@ -399,14 +288,7 @@ void Combat()
 
 int main()
 {
-	// Init
-	level = 1;
-	xp = 0;
-	xpToNextLevel = 76;
-	health = 100;
-	totalHealth = health;
-
-	CreatePlayer();
+	character.CreatePlayer();
 
 	HUD();
 	Moving();
