@@ -109,7 +109,7 @@ void Character::ValidateSex()
 	char sexInput;
 	bool correctSexInput = false;
 
-	std::cout << "Enter Letter Denoting Character Sex (M or F)" << std::endl;
+	std::cout << "Enter Letter Denoting Character Sex (M or F): ";
 	std::cin.ignore(INT_MAX, '\n');
 	sexInput = std::cin.get();
 	std::cin.ignore(INT_MAX, '\n');
@@ -130,7 +130,7 @@ void Character::ValidateSex()
 			break;
 		default:
 			std::cin.clear();
-			std::cout << "Invalid answer for sex. Try again." << std::endl;
+			std::cout << "Invalid answer for sex. Try again: ";
 			sexInput = std::cin.get();
 			std::cin.ignore(INT_MAX, '\n');
 			break;

@@ -6,10 +6,6 @@
 #include "Character.h"
 #include "Monster.h"
 
-/*
-5. Fix invalid number option so that it allows the user to type again, currently continues looping through else portion of code
-*/
-
 void HUD();
 void CombatHUD();
 void LevelUp();
@@ -161,8 +157,12 @@ void Moving()
 	}
 	else
 	{
-		std::cout << "Invalid Number" << std::endl;
-		Sleep(500);
+		std::cin.clear();
+		std::cin.ignore(INT_MAX, '\n');
+		std::cout << "Invalid input. Try again with a proper #." << std::endl;
+
+		Sleep(1000);
+		HUD();
 		Moving();
 	}
 }
@@ -241,8 +241,11 @@ void Combat()
 		}
 		else
 		{
-			std::cout << "Invalid Number" << std::endl;
-			Sleep(500);
+			std::cin.clear();
+			std::cin.ignore(INT_MAX, '\n');
+			std::cout << "Invalid input. Try again with a proper #." << std::endl;
+
+			Sleep(1000);
 			Combat();
 		}
 	}
